@@ -1,0 +1,7 @@
+{
+    "productos": [
+        {"sku": "HER-0001", "descripcion": "Martillo de acero", "activo": true},
+        {"sku": "HER-0002", "descripcion": "Destornillador plano", "activo": true},
+        {"sku": "HER-0003", "descripcion": "Alicate universal", "activo": true}
+    ]
+}

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Salidas locales de validación
+salidas/*.json
+!salidas/.gitkeep
+
+# Archivos temporales del editor
+.vscode/
+.idea/
+*.log
+
+# ANTLR: los archivos generados se incluyen en el repositorio.
+# El generador JAR descargado localmente se excluye de Git.
+
+# Generador ANTLR descargado localmente
+antlr-*-complete.jar
+
+# Copias de seguridad locales
+*.bak
+
+# Código fuente auxiliar descargado de ANTLR
+antlr-antlr4-*/

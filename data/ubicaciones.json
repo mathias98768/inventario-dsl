@@ -1,0 +1,7 @@
+{
+    "ubicaciones": [
+        {"codigo": "A-01-03", "descripcion": "Pasillo A, nivel 1", "activa": true},
+        {"codigo": "A-01-04", "descripcion": "Pasillo A, nivel 2", "activa": true},
+        {"codigo": "B-02-01", "descripcion": "Pasillo B, nivel 2", "activa": true}
+    ]
+}

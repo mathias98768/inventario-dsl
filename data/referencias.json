@@ -1,0 +1,11 @@
+{
+    "referencias": [
+        {"codigo": "OC-2026-001", "tipo_movimiento": "ENTRADA", "cantidad_maxima": 20, "activa": true},
+        {"codigo": "SAL-2026-001", "tipo_movimiento": "SALIDA", "cantidad_maxima": 5, "activa": true},
+        {"codigo": "SAL-2026-002", "tipo_movimiento": "SALIDA", "cantidad_maxima": 20, "activa": true},
+        {"codigo": "SAL-2026-003", "tipo_movimiento": "SALIDA", "cantidad_maxima": 5, "activa": true},
+        {"codigo": "TR-2026-001", "tipo_movimiento": "TRASLADO", "cantidad_maxima": 10, "activa": true},
+        {"codigo": "AJ-2026-001", "tipo_movimiento": "AJUSTE", "cantidad_maxima": 5, "activa": true},
+        {"codigo": "AJ-2026-002", "tipo_movimiento": "AJUSTE", "cantidad_maxima": 5, "activa": true}
+    ]
+}

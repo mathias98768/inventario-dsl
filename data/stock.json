@@ -1,0 +1,10 @@
+{
+    "stock": [
+        {"sku": "HER-0001", "ubicacion": "A-01-03", "cantidad": 10},
+        {"sku": "HER-0001", "ubicacion": "A-01-04", "cantidad": 4},
+        {"sku": "HER-0001", "ubicacion": "B-02-01", "cantidad": 0},
+        {"sku": "HER-0002", "ubicacion": "A-01-03", "cantidad": 5},
+        {"sku": "HER-0002", "ubicacion": "A-01-04", "cantidad": 3},
+        {"sku": "HER-0003", "ubicacion": "A-01-03", "cantidad": 8}
+    ]
+}
