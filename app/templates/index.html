@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario DSL | Analizador</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <p class="sobrelinea">PROYECTO DE COMPILADORES</p>
+            <h1>Analizador de movimientos de inventario</h1>
+            <p class="subtitulo">Validación léxica, sintáctica y semántica mediante un lenguaje específico de dominio.</p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section class="panel" aria-labelledby="titulo-entrada">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="sobrelinea">ENTRADA</p>
+                    <h2 id="titulo-entrada">Código del lote</h2>
+                </div>
+                <span class="etiqueta">DSL V1.0</span>
+            </div>
+
+            <form action="{{ url_for('web.analizar') }}" method="post" enctype="multipart/form-data" id="form-analizador">
+                <label for="codigo_dsl">Escriba el lenguaje</label>
+                <textarea id="codigo_dsl" name="codigo_dsl" rows="15" spellcheck="false" placeholder="LOTE {&#10;    ENTRADA { ... }&#10;}">{{ texto_dsl }}</textarea>
+
+                <div class="fila-archivo">
+                    <div class="selector-archivo">
+                        <label for="archivo">O cargue un archivo .dsl o .txt</label>
+                        <input type="file" id="archivo" name="archivo" accept=".dsl,.txt,text/plain">
+                        <span id="nombre-archivo" class="ayuda">Ningún archivo seleccionado</span>
+                    </div>
+                    <p class="ayuda prioridad">Prioridad: si selecciona un archivo, se analizará el archivo y se ignorará el texto del área.</p>
+                </div>
+
+                <div class="acciones">
+                    <button type="button" class="boton boton-secundario" id="cargar-ejemplo">Cargar ejemplo</button>
+                    <button type="submit" class="boton boton-principal">Analizar</button>
+                    <button type="button" class="boton boton-texto" id="limpiar">Limpiar</button>
+                </div>
+                <textarea id="ejemplo-dsl" hidden aria-hidden="true">{{ ejemplo_dsl }}</textarea>
+            </form>
+        </section>
+
+        {% if mensaje %}
+        <div class="mensaje mensaje-informativo" role="status">{{ mensaje }}</div>
+        {% endif %}
+
+        {% if resultado %}
+        <section class="panel resultados" id="resultados" aria-labelledby="titulo-resultado">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="sobrelinea">RESULTADO GENERAL</p>
+                    <h2 id="titulo-resultado">Estado del análisis</h2>
+                </div>
+                {% if resultado.aceptado %}
+                    <span class="estado estado-aceptado">ACEPTADO</span>
+                {% else %}
+                    <span class="estado estado-rechazado">RECHAZADO</span>
+                {% endif %}
+            </div>
+            <div class="resumen-resultado">
+                <div><span class="dato-etiqueta">Fase alcanzada</span><strong>{{ resultado.fase|capitalize }}</strong></div>
+                <div><span class="dato-etiqueta">Origen</span><strong>{{ nombre_origen }}</strong></div>
+                <div><span class="dato-etiqueta">Stock definitivo</span><strong>No modificado</strong></div>
+            </div>
+
+            <div class="aviso-stock">
+                <strong>Integridad del inventario:</strong>
+                {% if resultado.aceptado %}
+                    el análisis generó una proyección temporal. El archivo <code>data/stock.json</code> no fue modificado.
+                {% else %}
+                    el lote fue rechazado. No se confirmó ninguna modificación en <code>data/stock.json</code>.
+                {% endif %}
+            </div>
+
+            <section class="subseccion">
+                <h3>Tokens y lexemas</h3>
+                {% if resultado.tokens %}
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead><tr><th>Token</th><th>Lexema</th><th>Línea</th><th>Columna</th></tr></thead>
+                        <tbody>
+                            {% for token in resultado.tokens %}
+                            <tr>
+                                <td><code>{{ token.nombre }}</code></td>
+                                <td><code>{{ token.lexema }}</code></td>
+                                <td>{{ token.linea }}</td>
+                                <td>{{ token.columna }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="texto-vacio">No se generaron tokens.</p>
+                {% endif %}
+            </section>
+
+            <section class="subseccion">
+                <h3>Errores detectados</h3>
+                {% if resultado.errores %}
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead><tr><th>Fase</th><th>Código</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Descripción</th></tr></thead>
+                        <tbody>
+                            {% for error in resultado.errores %}
+                            <tr>
+                                <td>{{ error.fase }}</td>
+                                <td><strong>{{ error.codigo }}</strong></td>
+                                <td>{{ error.linea }}</td>
+                                <td>{{ error.columna }}</td>
+                                <td><code>{{ error.lexema }}</code></td>
+                                <td>{{ error.descripcion }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="mensaje-exito">No se detectaron errores en las fases ejecutadas.</p>
+                {% endif %}
+            </section>
+
+            {% if resultado.arbol %}
+            <section class="subseccion">
+                <h3>Árbol sintáctico</h3>
+                <pre class="bloque-codigo arbol">{{ resultado.arbol }}</pre>
+            </section>
+            {% endif %}
+
+            {% if resultado.movimientos %}
+            <section class="subseccion">
+                <h3>Movimientos extraídos por el visitor</h3>
+                <pre class="bloque-codigo">{{ resultado.movimientos|tojson(indent=2) }}</pre>
+            </section>
+            {% endif %}
+
+            {% if resultado.resultado_json %}
+            <section class="subseccion">
+                <h3>JSON generado</h3>
+                <pre class="bloque-codigo">{{ resultado.resultado_json|tojson(indent=2) }}</pre>
+            </section>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <footer class="pie-pagina">
+            <p>Prototipo académico. La aplicación valida los movimientos y calcula una proyección; no actualiza un inventario real.</p>
+        </footer>
+    </main>
+</body>
+</html>

@@ -11,6 +11,7 @@ El prototipo procesa lotes completos en orden secuencial. La validación se real
 - Runtime de Python fijado en `antlr4-python3-runtime==4.13.2`.
 - 31 escenarios de integración/regresión ejecutados localmente: 6 válidos, 5 léxicos, 8 sintácticos y 12 semánticos. En la última ejecución, los 31 devolvieron el código de salida esperado y no se registraron fallos.
 - La batería descrita es una colección de casos manuales ejecutados desde PowerShell; no es una suite de `pytest`.
+- Se incorpora una interfaz web local mediante Flask. La ejecución por consola se conserva.
 
 ## 1. Requisitos
 
@@ -18,6 +19,7 @@ Para ejecutar el programa:
 
 - Python 3.10 o superior.
 - `antlr4-python3-runtime==4.13.2`, instalado desde `requirements.txt`.
+- Flask 3.1 o superior y menor que 4, instalado desde `requirements.txt` (solo necesario para la interfaz web).
 
 Para volver a generar los módulos de ANTLR también se necesita:
 
@@ -26,7 +28,7 @@ Para volver a generar los módulos de ANTLR también se necesita:
 
 Los módulos generados se incluyen en el repositorio, por lo que Java y el JAR no son necesarios para una ejecución normal si no se modifica la gramática. La versión del generador y la del runtime deben mantenerse alineadas cuando se regenere el código.
 
-Entorno local en el que se verificó esta versión: Windows 11, Python 3.14.3, Eclipse Temurin OpenJDK 25.0.1 y ANTLR 4.13.2.
+Entorno local en el que se verificó la versión anterior del núcleo: Windows 11, Python 3.14.3, Eclipse Temurin OpenJDK 25.0.1 y ANTLR 4.13.2.
 
 ## 2. Instalación en Windows (PowerShell)
 
@@ -172,7 +174,7 @@ Los archivos `.dsl` de `casos/` cubren los siguientes grupos:
 | `casos/lexicos/` | 5 | Detectar L01-L05. |
 | `casos/sintacticos/` | 8 | Detectar S01-S08. |
 | `casos/semanticos/` | 12 | Detectar M01-M09 y comprobar rechazo integral y saldo acumulado. |
-| **Total** | **31** | **Casos ejecutados en la prueba de regresión local.** |
+| **Total** | **31** | **Casos ejecutados en la regresión local descrita durante el desarrollo.** |
 
 ### Ejecutar una prueba individual
 
@@ -238,6 +240,20 @@ inventario-dsl/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+├── run.py
+├── app/
+│   ├── __init__.py
+│   ├── routes.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   └── analizador_service.py
+│   ├── templates/
+│   │   └── index.html
+│   └── static/
+│       ├── css/
+│       │   └── styles.css
+│       └── js/
+│           └── app.js
 ├── grammar/
 │   └── Inventario.g4
 ├── generated/
@@ -272,7 +288,8 @@ inventario-dsl/
 
 - `grammar/`: gramática fuente del lenguaje.
 - `generated/`: lexer, parser y visitor generados por ANTLR 4.13.2, junto con sus archivos auxiliares.
-- `src/`: punto de entrada, visitor y validador semántico.
+- `src/`: punto de entrada por consola, visitor y validador semántico.
+- `app/`: rutas, servicio de análisis, plantilla HTML, CSS y JavaScript de la interfaz web.
 - `data/`: catálogos y stock inicial de ejemplo.
 - `casos/`: archivos DSL para las pruebas.
 - `docs/evidencias/`: espacio reservado para evidencias del desarrollo y ejecución.
@@ -280,8 +297,53 @@ inventario-dsl/
 
 ## 10. Límites del prototipo
 
-- No incorpora una interfaz web ni Flask.
+- La interfaz web Flask es local y sirve para ingresar, cargar y analizar lotes; no implementa autenticación ni administración de usuarios.
 - No persiste movimientos en una base de datos.
 - No actualiza el stock definitivo ni se conecta con un sistema empresarial.
 - Los datos maestros son ficticios y sirven para demostrar el análisis y la validación.
 - La validación semántica produce un stock proyectado; no equivale a confirmar una transacción real.
+
+## 11. Ejecución de la interfaz web Flask
+
+La interfaz web es una integración del analizador existente. No reemplaza el núcleo ANTLR ni elimina la ejecución por consola. Ambas modalidades están disponibles:
+
+- Consola: `python -m src.main .\casos\validos\valido_entrada.dsl`
+- Web: `python run.py`
+
+### Iniciar Flask
+
+Desde la raíz del repositorio, con el entorno virtual activado y las dependencias instaladas:
+
+```powershell
+python run.py
+```
+
+Abre en el navegador:
+
+```text
+http://127.0.0.1:5000
+```
+
+El servidor incluido es el servidor local de desarrollo de Flask.
+
+### Analizar texto escrito
+
+Escribe un lote en el área de texto y presiona **Analizar**. También puedes presionar **Cargar ejemplo** para insertar una ENTRADA compatible con los datos de ejemplo incluidos en `data/`.
+
+### Cargar un archivo
+
+Selecciona un archivo con extensión `.dsl` o `.txt` y presiona **Analizar**. La lectura se realiza en memoria mediante UTF-8; el archivo no se almacena permanentemente. Si se selecciona un archivo y también hay texto en el área, **el archivo tiene prioridad**. El contenido analizado vuelve a mostrarse en el área de texto.
+
+### Resultados mostrados
+
+La interfaz presenta el estado general, la fase alcanzada, los tokens y lexemas con sus posiciones, los errores detectados, el árbol sintáctico, los movimientos extraídos por el visitor y el JSON cuando el lote es aceptado.
+
+La integración web utiliza el mismo visitor y validador semántico del programa de consola. La validación web se realiza en memoria: **no modifica `data/stock.json` ni escribe el JSON de aceptación en `salidas/`**. El JSON se muestra directamente en la página.
+
+### Mantener la ejecución por consola
+
+La incorporación de Flask no reemplaza `src/main.py`. El comando original sigue siendo:
+
+```powershell
+python -m src.main .\casos\validos\valido_entrada.dsl
+```
