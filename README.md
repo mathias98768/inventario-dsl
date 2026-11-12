@@ -11,15 +11,18 @@ El prototipo procesa lotes completos en orden secuencial. La validación se real
 - Runtime de Python fijado en `antlr4-python3-runtime==4.13.2`.
 - 31 escenarios de integración/regresión ejecutados localmente: 6 válidos, 5 léxicos, 8 sintácticos y 12 semánticos. En la última ejecución, los 31 devolvieron el código de salida esperado y no se registraron fallos.
 - La batería descrita es una colección de casos manuales ejecutados desde PowerShell; no es una suite de `pytest`.
-- Se incorpora una interfaz web local mediante Flask. La ejecución por consola se conserva.
+- Se incorpora una interfaz web mediante Flask, disponible localmente en `http://127.0.0.1:5000/` y publicada en Render en `https://inventario-dsl.onrender.com/`. La ejecución por consola se conserva.
 
 ## 1. Requisitos
 
 Para ejecutar el programa:
 
-- Python 3.10 o superior.
+- Python 3.10 o superior para el entorno local.
 - `antlr4-python3-runtime==4.13.2`, instalado desde `requirements.txt`.
-- Flask 3.1 o superior y menor que 4, instalado desde `requirements.txt` (solo necesario para la interfaz web).
+- Flask 3.1 o superior y menor que 4, instalado desde `requirements.txt` (necesario para la interfaz web).
+- Gunicorn 27.0.0, instalado desde `requirements.txt` y utilizado como servidor WSGI en el despliegue de Render.
+
+La versión de Python utilizada en el despliegue de Render es `3.15.2`, declarada en el archivo `.python-version` ubicado en la raíz del repositorio.
 
 Para volver a generar los módulos de ANTLR también se necesita:
 
@@ -239,6 +242,7 @@ En la ejecución de regresión realizada durante el desarrollo se obtuvieron 31 
 inventario-dsl/
 ├── README.md
 ├── requirements.txt
+├── .python-version
 ├── .gitignore
 ├── run.py
 ├── app/
@@ -297,7 +301,7 @@ inventario-dsl/
 
 ## 10. Límites del prototipo
 
-- La interfaz web Flask es local y sirve para ingresar, cargar y analizar lotes; no implementa autenticación ni administración de usuarios.
+- La interfaz web Flask está disponible localmente y publicada como demostración académica en Render. Permite ingresar, cargar y analizar lotes, pero no implementa autenticación ni administración de usuarios.
 - No persiste movimientos en una base de datos.
 - No actualiza el stock definitivo ni se conecta con un sistema empresarial.
 - Los datos maestros son ficticios y sirven para demostrar el análisis y la validación.
@@ -307,8 +311,9 @@ inventario-dsl/
 
 La interfaz web es una integración del analizador existente. No reemplaza el núcleo ANTLR ni elimina la ejecución por consola. Ambas modalidades están disponibles:
 
-- Consola: `python -m src.main .\casos\validos\valido_entrada.dsl`
-- Web: `python run.py`
+- Consola local: `python -m src.main .\casos\validos\valido_entrada.dsl`
+- Web local: `python run.py`
+- Web publicada: https://inventario-dsl.onrender.com/
 
 ### Iniciar Flask
 
@@ -323,6 +328,9 @@ Abre en el navegador:
 ```text
 http://127.0.0.1:5000
 ```
+
+La versión pública de la interfaz está disponible en:
+https://inventario-dsl.onrender.com/
 
 El servidor incluido es el servidor local de desarrollo de Flask.
 
@@ -347,3 +355,51 @@ La incorporación de Flask no reemplaza `src/main.py`. El comando original sigue
 ```powershell
 python -m src.main .\casos\validos\valido_entrada.dsl
 ```
+
+## 12. Publicación de la interfaz web en Render
+
+La interfaz web se encuentra publicada como un Web Service en Render. El servicio utiliza la aplicación Flask existente y mantiene la integración con el lexer, parser, visitor y validador semántico desarrollados con ANTLR4.
+
+**URL pública:**
+
+https://inventario-dsl.onrender.com/
+
+**Repositorio:**
+
+https://github.com/mathias98768/inventario-dsl
+
+### Configuración del despliegue
+
+El servicio está conectado a la rama `main` del repositorio y utiliza Python 3.15.2, declarado en el archivo `.python-version`.
+
+**Build Command:**
+
+```bash
+pip install -r requirements.txt
+```
+
+**Start Command:**
+
+```bash
+gunicorn --bind 0.0.0.0:$PORT run:app
+```
+
+Gunicorn funciona como servidor WSGI de producción. La variable `PORT` es proporcionada automáticamente por Render y determina el puerto de escucha del servicio.
+
+### Ejecución local y ejecución publicada
+
+El proyecto conserva la ejecución por consola y ofrece la interfaz web en modalidad local o publicada.
+
+- **Consola:** el comando `python -m src.main` permite analizar un archivo DSL desde el entorno local. Cuando el lote es aceptado, se genera un archivo JSON en `salidas/`.
+- **Interfaz web local:** el comando `python run.py` inicia Flask mediante su servidor de desarrollo y permite utilizar la aplicación en `http://127.0.0.1:5000/`.
+- **Interfaz web publicada:** Render inicia la aplicación mediante Gunicorn y permite acceder a ella desde `https://inventario-dsl.onrender.com/`.
+
+La interfaz web procesa el texto ingresado o el archivo cargado en memoria. Los resultados se presentan directamente en la página y no se escribe el JSON de aceptación en `salidas/`.
+
+En ambas modalidades, la validación semántica trabaja sobre una copia temporal del stock. El archivo `data/stock.json` no se modifica ni se confirman operaciones en un inventario real.
+
+### Consideraciones del plan gratuito
+
+El servicio utiliza el plan gratuito de Render. Las instancias gratuitas pueden suspenderse después de un período de inactividad. Cuando se recibe una nueva solicitud, el servicio necesita reactivarse y la primera respuesta puede tardar 50 segundos o más.
+
+Una vez que la instancia vuelve a estar activa, la aplicación puede continuar procesando solicitudes normalmente. Esta demora corresponde al funcionamiento del alojamiento gratuito y no a una etapa adicional del análisis léxico, sintáctico o semántico.

@@ -1,5 +1,6 @@
-"""Paquete para los archivos generados por ANTLR4.
+"""Paquete que contiene los módulos Python generados con ANTLR 4.13.2.
 
-Ejecuta el comando documentado en README.md para generar aquí el lexer,
-parser y visitor. Los archivos generados no se incluyen en esta entrega.
+El lexer, parser y visitor generados, junto con sus archivos auxiliares,
+están versionados en el repositorio. Java y el JAR completo de ANTLR solo
+son necesarios para regenerar estos módulos cuando se modifica la gramática.
 """
